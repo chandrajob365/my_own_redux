@@ -43,10 +43,10 @@ const reducer = (state = initialState, action) => {
   }
 }
 
-const action = [
+/* const action = [
   {type: CREATE_NOTE},
   {type: UPDATE_NOTE, id: 1, content: 'OLA'}
-]
+] */
 
 // const state = action.reduce(reducer, undefined)
 
@@ -62,22 +62,49 @@ const validateAction = (action) => {
 
 const createStore = (reducer) => {
   let state = undefined
+  const subscribers = []
   return {
     dispatch: (action) => {
       validateAction(action)
       state = reducer(state, action)
-      console.log('state = ', JSON.stringify(state, null, 2))
+      console.log('{dispatch} state = ', JSON.stringify(state, null, 2))
+      subscribers.forEach((handler) => {
+        console.log('{dispatch} handler = ', handler)
+        handler()
+      })
+    },
+    subscribe: (handler) => {
+      subscribers.push(handler)
+      return () => {
+        const index = subscribers.indexOf(handler)
+        if (index > 0) {
+          subscribers.splice(index, 1)
+        }
+      }
     },
     getState: () => state
   }
 }
 
 const store = createStore(reducer)
+let t = store.subscribe(() => {
+  ReactDOM.render(
+    <pre>{JSON.stringify(store.getState(), null, 2)}</pre>,
+    document.getElementById('root')
+  )
+})
+
+console.log('t = ', t)
 store.dispatch({
   type: CREATE_NOTE
 })
-let t = store.getState()
-console.log('t = ', JSON.stringify(t, null, 2))
+
+store.dispatch({
+  type: UPDATE_NOTE,
+  id: 1,
+  content: 'Hello World'
+})
+
 // Store Implementation End //
 
 // ReactDOM.render(
