@@ -1,5 +1,46 @@
+// Store creation start //
+const validateAction = (action) => {
+  if (!action || typeof action !== 'object' || Array.isArray(action)) {
+    throw new Error('Action must be an object')
+  }
+  if (typeof action.type === 'undefined') {
+    throw new Error('Action must have a type')
+  }
+}
+
+const createStore = (reducer) => {
+  let state = undefined
+  const subscribers = []
+  return {
+    dispatch: (action) => {
+      validateAction(action)
+      state = reducer(state, action)
+      console.log('{dispatch} state = ', JSON.stringify(state, null, 2))
+      subscribers.forEach((handler) => {
+        console.log('{dispatch} handler = ', handler)
+        handler()
+      })
+    },
+    subscribe: (handler) => {
+      subscribers.push(handler)
+      return () => {
+        const index = subscribers.indexOf(handler)
+        if (index > 0) {
+          subscribers.splice(index, 1)
+        }
+      }
+    },
+    getState: () => state
+  }
+}
+// Store End //
+
+// Action Types Start//
 const CREATE_NOTE = 'CREATE_NOTE'
 const UPDATE_NOTE = 'UPDATE_NOTE'
+// Action Types End //
+
+// Reducer start //
 
 const initialState = {
   nextNodeId: 1,
@@ -42,59 +83,21 @@ const reducer = (state = initialState, action) => {
       return state
   }
 }
+// Reducer End //
 
-/* const action = [
-  {type: CREATE_NOTE},
-  {type: UPDATE_NOTE, id: 1, content: 'OLA'}
-] */
-
-// const state = action.reduce(reducer, undefined)
-
-// Store Implementation Start //
-const validateAction = (action) => {
-  if (!action || typeof action !== 'object' || Array.isArray(action)) {
-    throw new Error('Action must be an object')
-  }
-  if (typeof action.type === 'undefined') {
-    throw new Error('Action must have a type')
-  }
-}
-
-const createStore = (reducer) => {
-  let state = undefined
-  const subscribers = []
-  return {
-    dispatch: (action) => {
-      validateAction(action)
-      state = reducer(state, action)
-      console.log('{dispatch} state = ', JSON.stringify(state, null, 2))
-      subscribers.forEach((handler) => {
-        console.log('{dispatch} handler = ', handler)
-        handler()
-      })
-    },
-    subscribe: (handler) => {
-      subscribers.push(handler)
-      return () => {
-        const index = subscribers.indexOf(handler)
-        if (index > 0) {
-          subscribers.splice(index, 1)
-        }
-      }
-    },
-    getState: () => state
-  }
-}
-
+// Store //
 const store = createStore(reducer)
-let t = store.subscribe(() => {
+// Store //
+
+// Render app whenever store changes //
+store.subscribe(() => {
   ReactDOM.render(
     <pre>{JSON.stringify(store.getState(), null, 2)}</pre>,
     document.getElementById('root')
   )
 })
 
-console.log('t = ', t)
+// Dispatch actions //
 store.dispatch({
   type: CREATE_NOTE
 })
@@ -104,10 +107,3 @@ store.dispatch({
   id: 1,
   content: 'Hello World'
 })
-
-// Store Implementation End //
-
-// ReactDOM.render(
-//   <pre>{JSON.stringify(state, null, 2)}</pre>,
-//   document.getElementById('root')
-// )
